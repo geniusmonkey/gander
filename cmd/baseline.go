@@ -5,22 +5,21 @@ import (
 	"github.com/geniusmonkey/gander/migration"
 	"github.com/spf13/cobra"
 	"log"
-	"strconv"
 )
+
+var baselineVer int64
 
 var baselineCmd = &cobra.Command{
 	Use:     "baseline VERSION",
 	Short:   "Baseline an existing db to a specific VERSION",
-	Args:    cobra.ExactArgs(1),
-	PreRun: setup,
+	PreRun:  setup,
 	PostRun: tearDown,
 	Run: func(cmd *cobra.Command, args []string) {
-		ver, err := strconv.ParseInt(args[0], 10, 64)
-		if err != nil {
-			log.Fatalf("unable to convert version %s into number, %s", args[0], err)
+		if baselineVer == 0 {
+			log.Fatalf("you must supply a --version flag")
 		}
 
-		if err := migration.Baseline(db.Get(), proj.MigrationDir(), ver); err != nil {
+		if err := migration.Baseline(db.Get(), proj.MigrationDir(), baselineVer); err != nil {
 			log.Fatalf("failed to create migration, %s", err)
 		}
 	},
@@ -28,4 +27,5 @@ var baselineCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(baselineCmd)
+	baselineCmd.Flags().Int64Var(&baselineVer, "version", 0, "version to migrate to")
 }
