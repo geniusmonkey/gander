@@ -52,7 +52,7 @@ func getSQLStatements(r io.Reader, direction bool) ([]string, bool, error) {
 	statementEnded := false
 	ignoreSemicolons := false
 	directionIsActive := false
-	tx := true
+	tx := false
 	stmts := []string{}
 
 	for scanner.Scan() {
