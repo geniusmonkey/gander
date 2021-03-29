@@ -25,7 +25,7 @@ This is a new fort with work still to be done
 
 # Install
 
-    $ go get -u github.com/geniusmonkey/gander/cmd/gander
+    $ go get -u github.com/geniusmonkey/gander
 
 This will install the `gander` binary to your `$GOPATH/bin` directory.
 
