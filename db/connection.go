@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+
 	"github.com/apex/log"
 	"github.com/geniusmonkey/gander/creds"
 	"github.com/geniusmonkey/gander/env"
@@ -10,7 +12,6 @@ import (
 	"github.com/geniusmonkey/gander/project"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	"strings"
 )
 
 var sqlDb *sql.DB
@@ -30,6 +31,9 @@ func Setup(project project.Project, env env.Environment, cred creds.Credentials)
 	case "mysql":
 		driver = "mysql"
 		dsn = buildMysql(env, cred)
+	case "postgres":
+		driver = "postgres"
+		dsn = buildPostgres(env, cred)
 	}
 
 	sqlDb, err = sql.Open(driver, dsn)
@@ -51,23 +55,33 @@ func buildMysql(environment env.Environment, cred creds.Credentials) string {
 		fmt.Fprintf(sb, "%v=%v&", k, v)
 	}
 
-	return sb.String()
+	s := sb.String()
+	fmt.Println(s)
+	return s
 }
 
 func buildPostgres(environment env.Environment, cred creds.Credentials) string {
-	sb := new(strings.Builder)
-	sb.WriteString("postgres://")
+	dsn := map[string]string{
+		"host":   environment.Host,
+		"port":   fmt.Sprintf("%v", environment.Port),
+		"dbname": environment.Schema,
+	}
 
 	if cred.Username != "" {
-		fmt.Fprintf(sb, "%v:%v@", cred.Username, cred.Password)
+		dsn["user"] = cred.Username
+		dsn["password"] = cred.Password
 	}
 
-	fmt.Fprintf(sb, "%v:%v/%v?", environment.Host, environment.Port, environment.Schema)
 	for k, v := range environment.Paramas {
-		fmt.Fprintf(sb, "%v=%v&", k, v)
+		dsn[k] = v
 	}
 
-	return sb.String()
+	dsnStr := ""
+	for k, v := range dsn {
+		dsnStr += fmt.Sprintf("%v=%v ", k, v)
+	}
+
+	return dsnStr
 }
 
 func Close() {
